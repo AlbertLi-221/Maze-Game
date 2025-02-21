@@ -10,7 +10,7 @@ html, body {
     bottom: 0;
     left: 0;
     right: 0;
-    background-color: #fff;
+    background: linear-gradient(45deg, #444, #fff);
     font-family: 'Poppins', sans-serif;
 }
 
@@ -129,4 +129,72 @@ input:focus, select:focus {
 	input, select {
 	    width: 120px;
 	}
+}
+
+/* replay button */
+.play-bt{
+    background: #0f0;
+    padding: 5px;
+    border-radius: 8px;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    border: none;
+  }
+  .play-bt:hover{
+    /* transform: translateY(2px); */
+    transition: .3s;
+    transform: scale(1.1);
+    background: darkmagenta;
+    color: #FFF;
+  }
+
+/* 調整 Checkbox 讓它與 Start 按鈕一致 */
+.keys-checkbox {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 150px;  /* 與 Start 按鈕對齊 */
+    height: 45px;  /* 與 Start 按鈕對齊 */
+    background-color: rgba(0, 0, 0, 0.30);
+    border-radius: 5px;
+    color: white;
+    font-size: 15px;
+    cursor: pointer;
+    text-align: center;
+}
+
+/* 調整 Switch Checkbox */
+.keys-checkbox input {
+    height: 25px;  /* 讓內部的開關適中 */
+    width: 60px;
+    cursor: pointer;
+    appearance: none;
+    position: relative;
+    background: #4B4B4B;
+    border-radius: 20px;
+    transition: background-color 0.3s;
+    margin-left: 10px; /* 確保文字和開關對齊 */
+}
+
+.keys-checkbox input::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 5px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #8c8c8c;
+    transform: translateY(-50%);
+    transition: all 0.3s ease;
+}
+
+.keys-checkbox input:checked {
+    background: #0f0;
+}
+
+.keys-checkbox input:checked::before {
+    left: 35px;
+    background: #fff;
 }

@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Maze</title>
   <link rel="stylesheet" href="./style.css">
+  <script src="script.js" defer></script>
 </head>
 <body>
 
@@ -21,17 +22,50 @@
     </div>
 
     <br>
-    <div id="menu">
-      <div class="custom-select">
-        <select id="diffSelect">
-                  <option value="10">Easy</option>
-                  <option value="15">Medium</option>
-                  <option value="25">Hard</option>
-                  <option value="38">Extreme</option>                                      
-              </select>
+    <header>
+      <div id="menu">
+        <div class="custom-select">
+            <select id="eventNum" class="eventNum" label="Events in Maze">
+                <option value="0" selected>Events ▼</option>
+                <option value="0">0</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>  
+            </select>
+        </div>
+        
+        <div class="custom-select">
+            <select id="diffSelect">
+                <option value="10" selected>Difficulty ▼</option>
+                <option value="10">Easy</option>
+                <option value="15">Medium</option>
+                <option value="25">Hard</option>
+                <option value="38">Extreme</option>                                      
+            </select>
+        </div>
+    
+        <input id="startMazeBtn" type="button" onclick="makeMaze()" value="Start" />
+        
+        <!-- 記錄路徑與回播功能，與其他選單對齊 -->
+        <div class="custom-select">
+            <label class="keys-checkbox">
+                <span>Record</span>
+                <input type="checkbox" id="record-checkbox">
+            </label>
+        </div>
+        <input id="play-bt" type="button" onclick="player.replayPath()" value="▶" class="play-bt"/>
+
       </div>
-      <input id="startMazeBtn" type="button" onclick="makeMaze()" value="Start" />
-    </div>
+    </header>
+    
+    
+  
+
 
     <div id="view">
       <div id="mazeContainer">
@@ -46,6 +80,6 @@
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.touchswipe/1.6.18/jquery.touchSwipe.min.js"></script>
   
-  <script src="./script.js"></script>
+  <!-- <script src="./script.js"></script> -->
 </body>
 </html>
