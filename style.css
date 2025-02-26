@@ -198,3 +198,7 @@ input:focus, select:focus {
     left: 35px;
     background: #fff;
 }
+
+#fog-checkbox {
+    margin-left: 10px; /* 確保開關與文字對齊 */
+}
