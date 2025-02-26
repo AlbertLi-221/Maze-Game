@@ -1,32 +1,32 @@
 [
     {
         "id": 1,
-        "name": "增強視野",
-        "description": "你的視野擴展 2 格，持續 3 步！",
+        "name": "Enhanced Vision",
+        "description": "Your vision expands by 2 tiles for the next 3 steps!",
         "effect": "increase_vision",
         "duration": 3,
         "value": 2
     },
     {
         "id": 2,
-        "name": "視野受限",
-        "description": "你的視野減少到 1 格，持續 5 步！",
+        "name": "Restricted Vision",
+        "description": "Your vision is reduced to 1 tile for the next 5 steps!",
         "effect": "reduce_vision",
         "duration": 5,
         "value": 1
     },
     {
         "id": 3,
-        "name": "穿牆能力",
-        "description": "你可以穿牆一次！",
+        "name": "Wall Pass",
+        "description": "You can pass through one wall!",
         "effect": "pass_through_wall",
         "duration": 1,
         "value": 1
     },
     {
         "id": 4,
-        "name": "回到起點",
-        "description": "你被傳送回起點，並清除記錄路徑與記錄點。",
+        "name": "Return to Start",
+        "description": "You are teleported back to the start, clearing your recorded path and checkpoint.",
         "effect": "reset_position",
         "duration": 0,
         "value": 0
