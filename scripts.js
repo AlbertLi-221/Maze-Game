@@ -1,3 +1,4 @@
+
 function rand(max) {
     return Math.floor(Math.random() * max);
   }
@@ -210,79 +211,7 @@ function rand(max) {
     defineMaze();
   }
   
-  var visibilityMap = [];  // 確保它是全域變數
-  function initializeFog(maze) {
-    let width = maze.map().length;
-    let height = maze.map()[0].length;
-
-    console.log("迷宮寬度:", width, "迷宮高度:", height); // **確認迷宮大小是否正常**
-
-    // 建立 visibilityMap，預設所有格子為 false (不可見)
-    let visibilityMap = Array.from({ length: width }, () => Array(height).fill(false));
-
-    console.log("初始化的 visibilityMap:", visibilityMap); // **檢查 visibilityMap 是否正確建立**
-
-    // 取得起點和終點
-    let start = maze.startCoord();
-    let end = maze.endCoord();
-
-    // 設定終點可見
-    visibilityMap[end.x][end.y] = true;
-
-    // 設定起點 3×3 區域可見
-    revealArea(visibilityMap, start.x, start.y, width, height);
-
-    return visibilityMap;
-  }
-
-  // 讓 (x, y) 為中心的 3×3 區域變為可見
-  function revealArea(visibilityMap, x, y, width, height) {
-      for (let dx = -1; dx <= 1; dx++) {
-          for (let dy = -1; dy <= 1; dy++) {
-              let nx = x + dx;
-              let ny = y + dy;
-              // 確保不超出邊界
-              if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
-                  visibilityMap[nx][ny] = true;
-              }
-          }
-      }
-  }
-
-  // 畫出迷霧效果
-  function drawFog(ctx, maze, visibilityMap, cellSize) {
-    if (!visibilityMap || !Array.isArray(visibilityMap) || visibilityMap.length === 0) {
-      console.error("❌ visibilityMap 尚未初始化或格式錯誤", visibilityMap);
-      return;
-    }
-      let width = maze.map().length;
-      let height = maze.map()[0].length;
-
-      if (width === 0 || height === 0) {
-        console.error("❌ 迷宮大小錯誤，無法繪製迷霧");
-        return;
-    }
-      ctx.fillStyle = "rgba(0, 0, 0, 0.8)"; // 黑色半透明迷霧
-
-      for (let x = 0; x < width; x++) {
-          for (let y = 0; y < height; y++) {
-              if (!visibilityMap[x][y]) { 
-                  ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
-              }
-          }
-      }
-  }
-
-  // 當玩家移動時，擴展新的 3×3 可視區域
-  function updateVisibility(playerX, playerY, visibilityMap, width, height) {
-      revealArea(visibilityMap, playerX, playerY, width, height);
-  }
-
-
   function DrawMaze(Maze, ctx, cellsize, endSprite = null) {
-    if (typeof visibilityMap !== "undefined" && visibilityMap) {
-      drawFog(ctx, Maze, visibilityMap, cellSize);
-  }  
     var map = Maze.map();
     var cellSize = cellsize;
     var drawEndMethod;
@@ -391,9 +320,177 @@ function rand(max) {
     clear();
     drawMap();
     drawEndMethod();
-
-    // **畫迷霧**
-    drawFog(ctx, Maze, visibilityMap, cellSize);
+  }
+  
+  function Player(maze, c, _cellsize, onComplete, sprite = null) {
+    var ctx = c.getContext("2d");
+    var drawSprite;
+    var moves = 0;
+    drawSprite = drawSpriteCircle;
+    if (sprite != null) {
+      drawSprite = drawSpriteImg;
+    }
+    var player = this;
+    var map = maze.map();
+    var cellCoords = {
+      x: maze.startCoord().x,
+      y: maze.startCoord().y
+    };
+    var cellSize = _cellsize;
+    var halfCellSize = cellSize / 2;
+  
+    this.redrawPlayer = function(_cellsize) {
+      cellSize = _cellsize;
+      drawSpriteImg(cellCoords);
+    };
+  
+    function drawSpriteCircle(coord) {
+      ctx.beginPath();
+      ctx.fillStyle = "yellow";
+      ctx.arc(
+        (coord.x + 1) * cellSize - halfCellSize,
+        (coord.y + 1) * cellSize - halfCellSize,
+        halfCellSize - 2,
+        0,
+        2 * Math.PI
+      );
+      ctx.fill();
+      if (coord.x === maze.endCoord().x && coord.y === maze.endCoord().y) {
+        onComplete(moves);
+        player.unbindKeyDown();
+      }
+    }
+  
+    function drawSpriteImg(coord) {
+      var offsetLeft = cellSize / 50;
+      var offsetRight = cellSize / 25;
+      ctx.drawImage(
+        sprite,
+        0,
+        0,
+        sprite.width,
+        sprite.height,
+        coord.x * cellSize + offsetLeft,
+        coord.y * cellSize + offsetLeft,
+        cellSize - offsetRight,
+        cellSize - offsetRight
+      );
+      if (coord.x === maze.endCoord().x && coord.y === maze.endCoord().y) {
+        onComplete(moves);
+        player.unbindKeyDown();
+      }
+    }
+  
+    function removeSprite(coord) {
+      var offsetLeft = cellSize / 50;
+      var offsetRight = cellSize / 25;
+      ctx.clearRect(
+        coord.x * cellSize + offsetLeft,
+        coord.y * cellSize + offsetLeft,
+        cellSize - offsetRight,
+        cellSize - offsetRight
+      );
+    }
+  
+    function check(e) {
+      var cell = map[cellCoords.x][cellCoords.y];
+      moves++;
+      switch (e.keyCode) {
+        case 65:
+        case 37: // west
+          if (cell.w == true) {
+            removeSprite(cellCoords);
+            cellCoords = {
+              x: cellCoords.x - 1,
+              y: cellCoords.y
+            };
+            drawSprite(cellCoords);
+          }
+          break;
+        case 87:
+        case 38: // north
+          if (cell.n == true) {
+            removeSprite(cellCoords);
+            cellCoords = {
+              x: cellCoords.x,
+              y: cellCoords.y - 1
+            };
+            drawSprite(cellCoords);
+          }
+          break;
+        case 68:
+        case 39: // east
+          if (cell.e == true) {
+            removeSprite(cellCoords);
+            cellCoords = {
+              x: cellCoords.x + 1,
+              y: cellCoords.y
+            };
+            drawSprite(cellCoords);
+          }
+          break;
+        case 83:
+        case 40: // south
+          if (cell.s == true) {
+            removeSprite(cellCoords);
+            cellCoords = {
+              x: cellCoords.x,
+              y: cellCoords.y + 1
+            };
+            drawSprite(cellCoords);
+          }
+          break;
+      }
+    }
+  
+    this.bindKeyDown = function() {
+      window.addEventListener("keydown", check, false);
+  
+      $("#view").swipe({
+        swipe: function(
+          event,
+          direction,
+          distance,
+          duration,
+          fingerCount,
+          fingerData
+        ) {
+          console.log(direction);
+          switch (direction) {
+            case "up":
+              check({
+                keyCode: 38
+              });
+              break;
+            case "down":
+              check({
+                keyCode: 40
+              });
+              break;
+            case "left":
+              check({
+                keyCode: 37
+              });
+              break;
+            case "right":
+              check({
+                keyCode: 39
+              });
+              break;
+          }
+        },
+        threshold: 0
+      });
+    };
+  
+    this.unbindKeyDown = function() {
+      window.removeEventListener("keydown", check, false);
+      $("#view").swipe("destroy");
+    };
+  
+    drawSprite(maze.startCoord());
+  
+    this.bindKeyDown();
   }
   
   var mazeCanvas = document.getElementById("mazeCanvas");
@@ -480,234 +577,10 @@ function rand(max) {
     var e = document.getElementById("diffSelect");
     difficulty = e.options[e.selectedIndex].value;
     cellSize = mazeCanvas.width / difficulty;
-
-    // **確保迷宮正確建立**
     maze = new Maze(difficulty, difficulty);
-    console.log("✅ 迷宮建立完成", maze.map());
-
     draw = new DrawMaze(maze, ctx, cellSize, finishSprite);
     player = new Player(maze, mazeCanvas, cellSize, displayVictoryMess, sprite);
-
-    // **初始化迷霧**
-    visibilityMap = initializeFog(maze);
-    drawFog(ctx, maze, visibilityMap, cellSize); // 畫上迷霧
-    console.log("✅ 迷霧初始化完成", visibilityMap);
-
     if (document.getElementById("mazeContainer").style.opacity < "100") {
       document.getElementById("mazeContainer").style.opacity = "100";
     }
   }
-
-document.getElementById("record-checkbox").addEventListener("change", function() {
-  player.toggleRecord(this.checked);
-});
-
-
-
-function Player(maze, c, _cellsize, onComplete, sprite = null) {
-  var ctx = c.getContext("2d");
-  var moves = 0;
-  var player = this;
-  var map = maze.map();
-  var cellCoords = {
-      x: maze.startCoord().x,
-      y: maze.startCoord().y
-  };
-  var cellSize = _cellsize;
-  var halfCellSize = cellSize / 2;
-  var pathHistory = [];  // 記錄路徑
-  var recordPath = false;  // 是否記錄
-  var fixedRecordPoint = null; // **存放開啟記錄時的位置**
-
-  var drawSprite = sprite ? drawSpriteImg : drawSpriteCircle;
-
-  function drawSpriteCircle(coord) {
-      ctx.beginPath();
-      ctx.fillStyle = "yellow";
-      ctx.arc(
-          (coord.x + 1) * cellSize - halfCellSize,
-          (coord.y + 1) * cellSize - halfCellSize,
-          halfCellSize - 2,
-          0,
-          2 * Math.PI
-      );
-      ctx.fill();
-
-      if (coord.x === maze.endCoord().x && coord.y === maze.endCoord().y) {
-          onComplete(moves);
-          player.unbindKeyDown();
-      }
-  }
-
-  function drawSpriteImg(coord) {
-      var offsetLeft = cellSize / 50;
-      var offsetRight = cellSize / 25;
-      ctx.drawImage(
-          sprite,
-          0,
-          0,
-          sprite.width,
-          sprite.height,
-          coord.x * cellSize + offsetLeft,
-          coord.y * cellSize + offsetLeft,
-          cellSize - offsetRight,
-          cellSize - offsetRight
-      );
-      if (coord.x === maze.endCoord().x && coord.y === maze.endCoord().y) {
-          onComplete(moves);
-          player.unbindKeyDown();
-      }
-  }
-
-  this.removeSprite = function(coord) {
-      var offsetLeft = cellSize / 50;
-      var offsetRight = cellSize / 25;
-      ctx.clearRect(
-          coord.x * cellSize + offsetLeft,
-          coord.y * cellSize + offsetLeft,
-          cellSize - offsetRight,
-          cellSize - offsetRight
-      );
-  };
-
-  function movePlayer(dx, dy) {
-      var newCoords = { x: cellCoords.x + dx, y: cellCoords.y + dy };
-
-      var cell = map[cellCoords.x][cellCoords.y];
-      if ((dx === -1 && !cell.w) || (dx === 1 && !cell.e) ||
-          (dy === -1 && !cell.n) || (dy === 1 && !cell.s)) {
-          return;
-      }
-
-      player.removeSprite(cellCoords);
-      cellCoords = newCoords;
-      drawSprite(cellCoords);
-      moves++;
-
-      if (typeof visibilityMap !== "undefined" && visibilityMap) {
-        updateVisibility(cellCoords.x, cellCoords.y, visibilityMap, maze.map().length, maze.map()[0].length);
-        drawFog(ctx, maze, visibilityMap, cellSize);
-    }
-    
-      // **更新可視範圍**
-      updateVisibility(cellCoords.x, cellCoords.y, visibilityMap, maze.map().length, maze.map()[0].length);
-      drawFog(ctx, maze, visibilityMap, cellSize); // 重新繪製迷霧
-
-      // 記錄路徑
-      if (recordPath) {
-          let direction = "";
-          if (dx === -1) direction = "left";
-          if (dx === 1) direction = "right";
-          if (dy === -1) direction = "up";
-          if (dy === 1) direction = "down";
-
-          pathHistory.push(direction);
-          console.log("目前路徑:", pathHistory.join(" → "));
-      }
-  }
-
-  function check(e) {
-      switch (e.keyCode) {
-          case 37: // Left (A)
-          case 65:
-              movePlayer(-1, 0);
-              break;
-          case 38: // Up (W)
-          case 87:
-              movePlayer(0, -1);
-              break;
-          case 39: // Right (D)
-          case 68:
-              movePlayer(1, 0);
-              break;
-          case 40: // Down (S)
-          case 83:
-              movePlayer(0, 1);
-              break;
-      }
-  }
-
-  this.bindKeyDown = function() {
-      window.addEventListener("keydown", check, false);
-  };
-
-  this.unbindKeyDown = function() {
-      window.removeEventListener("keydown", check, false);
-  };
-
-  drawSprite(maze.startCoord());
-  this.bindKeyDown();
-
-  /* 加入回放功能 */
-  this.replayPath = function() {
-    if (pathHistory.length === 0) {
-        console.log("⚠ 沒有記錄的路徑！");
-        return;
-    }
-    if (!fixedRecordPoint) {
-        console.log("⚠ 記錄點未設定，請先開啟記錄！");
-        return;
-    }
-
-    console.log("🔄 回到記錄點，開始回播路徑...");
-
-    // **暫存記錄狀態，並關閉記錄**
-    let previousRecordState = recordPath;
-    recordPath = false;
-
-    // **回到固定記錄點**
-    player.removeSprite(cellCoords);
-    cellCoords = { ...fixedRecordPoint };
-    drawSprite(cellCoords);
-
-    let index = 0;
-
-    function step() {
-        if (index < pathHistory.length) {
-            setTimeout(() => {
-                let direction = pathHistory[index];
-
-                switch (direction) {
-                    case "left":
-                        movePlayer(-1, 0);
-                        break;
-                    case "right":
-                        movePlayer(1, 0);
-                        break;
-                    case "up":
-                        movePlayer(0, -1);
-                        break;
-                    case "down":
-                        movePlayer(0, 1);
-                        break;
-                }
-
-                console.log(`▶ 移動: ${direction}`);
-
-                index++;
-                step();
-            }, 300);
-        } else {
-            console.log("✅ 回播完成！");
-
-            // **恢復記錄狀態**
-            recordPath = previousRecordState;
-        }
-    }
-
-    step();
-};
-
-
-  /* 設定記錄模式 */
-  this.toggleRecord = function(enable) {
-      recordPath = enable;
-      if (enable) {
-          fixedRecordPoint = { ...cellCoords };  // **記錄當前位置為記錄點**
-          pathHistory = []; // **清空舊的路徑**
-          console.log("✅ 開啟記錄模式，起始位置:", fixedRecordPoint);
-      } else {
-          console.log("⏸ 記錄暫停，但記錄點不變。");
-      }
-  };
-}
