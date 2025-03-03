@@ -707,7 +707,153 @@ function Player(maze, c, _cellsize, onComplete, sprite = null) {
             let event = events[Math.floor(Math.random() * events.length)];
             console.log("🔹 事件名稱:", event.name);
             alert(`事件發生: ${event.name}\n${event.description}`);
-          });
+
+            function default_action() {
+              let px = cellCoords.x;
+              let py = cellCoords.y;
+              let startCoord = maze.startCoord(); // 🔹 取得起點座標
+              let endCoord = maze.endCoord();
+
+              // 🔹 **清除 3x3 內的迷霧**
+              for (let dx = -1; dx <= 1; dx++) {
+                for (let dy = -1; dy <= 1; dy++) {
+                  let nx = px + dx;
+                  let ny = py + dy;
+                  if (isValidCoord(nx, ny)) {
+                    ctx.clearRect(nx * cellSize, ny * cellSize, cellSize, cellSize);
+                  }
+                }
+              }
+
+              // 🔹 **確保起點不被迷霧覆蓋**
+              ctx.clearRect(startCoord.x * cellSize, startCoord.y * cellSize, cellSize, cellSize);
+
+              // 🔹 **清除終點的迷霧**
+              ctx.clearRect(endCoord.x * cellSize, endCoord.y * cellSize, cellSize, cellSize);
+
+              // 🔹 **重新繪製視野內的迷宮線條**
+              draw.redrawMaze(cellSize); // ✅ 直接使用 redrawMaze()，確保迷宮線條仍然可見
+
+              // 🔹 **對 3×3 視野範圍外的格子重新覆蓋迷霧**
+              for (let x = 0; x < map.length; x++) {
+                for (let y = 0; y < map[x].length; y++) {
+                  if (
+                    !((x >= px - 1 && x <= px + 1) && (y >= py - 1 && y <= py + 1)) && // 視野外
+                    !(x === startCoord.x && y === startCoord.y) // 不是起點
+                  ) {
+                    ctx.drawImage(fogImage, x * cellSize, y * cellSize, cellSize, cellSize);
+                  }
+                }
+              }
+              // 🔹 **清除終點的迷霧**
+              ctx.clearRect(endCoord.x * cellSize, endCoord.y * cellSize, cellSize, cellSize);
+
+              // 🔹 **繪製視野內的事件**
+              draw.eventPositions.forEach(pos => {
+                if ((pos.x >= px - 1 && pos.x <= px + 1) && (pos.y >= py - 1 && pos.y <= py + 1)) {
+                  let eventImage = new Image();
+                  eventImage.src = "./dice.png"; // 假設事件圖片是 `dice.png`
+                  eventImage.onload = function () {
+                    ctx.drawImage(eventImage, pos.x * cellSize, pos.y * cellSize, cellSize, cellSize);
+                  };
+                }
+              });
+              // 🔹 **先清除終點的迷霧**
+            ctx.clearRect(maze.endCoord.x * cellSize, maze.endCoord.y * cellSize, cellSize, cellSize);
+
+            // 🔹 **重新畫終點**
+            draw.drawEndMethod();
+
+            // 🔹 **重新畫玩家**
+            if (player) {
+              player.redrawPlayer(cellSize);
+            }
+            }
+            function Enhanced_Vision() {
+              // 第一個事件 Your vision expands by 2 tiles for the next 3 steps!
+
+              let px = cellCoords.x;
+              let py = cellCoords.y;
+              let startCoord = maze.startCoord(); // 🔹 取得起點座標
+              let endCoord = maze.endCoord();
+
+              // 🔹 **清除 5x5 內的迷霧**
+              for (let dx = -2; dx <= 2; dx++) {
+                for (let dy = -2; dy <= 2; dy++) {
+                  let nx = px + dx;
+                  let ny = py + dy;
+                  if (isValidCoord(nx, ny)) {
+                    ctx.clearRect(nx * cellSize, ny * cellSize, cellSize, cellSize);
+                  }
+                }
+              }
+
+              // 🔹 **確保起點不被迷霧覆蓋**
+              ctx.clearRect(startCoord.x * cellSize, startCoord.y * cellSize, cellSize, cellSize);
+
+              // 🔹 **清除終點的迷霧**
+              ctx.clearRect(endCoord.x * cellSize, endCoord.y * cellSize, cellSize, cellSize);
+
+              // 🔹 **重新繪製視野內的迷宮線條**
+              draw.redrawMaze(cellSize); // ✅ 直接使用 redrawMaze()，確保迷宮線條仍然可見
+
+              // 🔹 **對 5x5 視野範圍外的格子重新覆蓋迷霧**
+              for (let x = 0; x < map.length; x++) {
+                for (let y = 0; y < map[x].length; y++) {
+                  if (
+                    !((x >= px - 2 && x <= px + 2) && (y >= py - 2 && y <= py + 2)) && // 視野外
+                    !(x === startCoord.x && y === startCoord.y) // 不是起點
+                  ) {
+                    ctx.drawImage(fogImage, x * cellSize, y * cellSize, cellSize, cellSize);
+                  }
+                }
+                // 🔹 **清除終點的迷霧**
+                ctx.clearRect(endCoord.x * cellSize, endCoord.y * cellSize, cellSize, cellSize);
+
+                // 🔹 **繪製視野內的事件**
+                draw.eventPositions.forEach(pos => {
+                  if ((pos.x >= px - 2 && pos.x <= px + 2) && (pos.y >= py - 2 && pos.y <= py + 2)) {
+                    let eventImage = new Image();
+                    eventImage.src = "./dice.png"; // 假設事件圖片是 `dice.png`
+                    eventImage.onload = function () {
+                      ctx.drawImage(eventImage, pos.x * cellSize, pos.y * cellSize, cellSize, cellSize);
+                    };
+                  }
+                });
+              }
+
+              // 🔹 **先清除終點的迷霧**
+              ctx.clearRect(maze.endCoord.x * cellSize, maze.endCoord.y * cellSize, cellSize, cellSize);
+
+              // 🔹 **重新畫終點**
+              draw.drawEndMethod();
+
+              // 🔹 **重新畫玩家**
+              if (player) {
+                player.redrawPlayer(cellSize);
+              }
+
+            }
+
+            if (event.name === "Enhanced Vision" && fogEnabled) {
+             
+              let keyPressCount = 0;
+
+              function incrementKeyPressCount() {
+                keyPressCount++;
+                console.log("Key pressed " + keyPressCount + " times");
+                
+                if (keyPressCount <= 3) {
+                  Enhanced_Vision();
+                } else {
+                  default_action();
+                }
+              }
+              window.addEventListener("keydown", incrementKeyPressCount);
+            }
+            
+          }
+        );
 
         // 清除事件位置 (不再顯示)
         draw.eventPositions.splice(index, 1);
