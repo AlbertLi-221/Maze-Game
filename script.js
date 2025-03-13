@@ -519,6 +519,9 @@ document.getElementById("record-checkbox").addEventListener("change", function (
   player.toggleRecord(this.checked);
 });
 
+var recordPath = false;  // 全域變數，控制是否記錄移動路徑
+var isReplaying = false; // 全域變數，標記是否正在進行回放
+
 
 
 function Player(maze, c, _cellsize, onComplete, sprite = null) {
@@ -537,7 +540,7 @@ function Player(maze, c, _cellsize, onComplete, sprite = null) {
   var cellSize = _cellsize;
   var halfCellSize = cellSize / 2;
   var pathHistory = [];  // 記錄路徑
-  var recordPath = false;  // 是否記錄
+  recordPath = false;  // 是否記錄
   var fixedRecordPoint = null; // **存放開啟記錄時的位置**
 
   var drawSprite = sprite ? drawSpriteImg : drawSpriteCircle;
@@ -686,9 +689,12 @@ function Player(maze, c, _cellsize, onComplete, sprite = null) {
     moves++;
 
     player.updateFog(cellCoords.x, cellCoords.y); // 🔹 移動後更新迷霧
+    console.log("🚶 玩家移動: dx =", dx, "dy =", dy);
+    console.log("🎯 當前座標:", cellCoords);
+    console.log("📌 `movePlayer()` 內部的 `recordPath` 狀態:", recordPath);
 
     // 記錄路徑
-    if (recordPath) {
+    if (recordPath && !isReplaying) {
       let direction = "";
       if (dx === -1) direction = "left";
       if (dx === 1) direction = "right";
@@ -697,6 +703,10 @@ function Player(maze, c, _cellsize, onComplete, sprite = null) {
 
       pathHistory.push(direction);
       console.log("目前路徑:", pathHistory.join(" → "));
+      console.log("📌 新增移動記錄:", direction);
+      console.log("📜 當前路徑記錄:", pathHistory);
+    } else {
+      console.log("⚠ `recordPath` 為", recordPath, " 或 `isReplaying` 為", isReplaying, "未記錄移動");
     }
 
     // 🔹 檢查是否踩到事件
@@ -932,10 +942,20 @@ function Player(maze, c, _cellsize, onComplete, sprite = null) {
                 draw.applyFog();
               }
               player = new Player(maze, mazeCanvas, cellSize, displayVictoryMess, sprite); // Re-initialize player
+              player.cellCoords = { ...maze.startCoord() }; // **設定玩家為起點座標**
               moves = 0;
+
+              pathHistory = [];
+              console.log("🗑 清空路徑記錄:", pathHistory);
+
               if (recordPath) {
-                pathHistory = [];
+                fixedRecordPoint = { ...player.cellCoords }; // **重新設定記錄點**
+                // isReplaying = false; // **確保回放狀態被重置**
+                console.log("✅ `Return to Start` 完成，記錄模式開啟，新的 `fixedRecordPoint`:", fixedRecordPoint);
+              } else {
+                console.log("⛔ `Return to Start` 完成，但 `recordPath` 已關閉，無法記錄！");
               }
+              console.log("📌 `Return to Start` 後 `recordPath` 狀態:", recordPath);
             }
 
 
@@ -973,6 +993,9 @@ function Player(maze, c, _cellsize, onComplete, sprite = null) {
               window.addEventListener("keydown", incrementKeyPressCount);
             } else if (event.name === "Return to Start") {
               Return_to_Start();
+              recordPath = true;
+              fixedRecordPoint = { ...player.cellCoords };
+              console.log("🔄 強制開啟記錄，起始點:", fixedRecordPoint);
             }
 
           }
@@ -1034,7 +1057,16 @@ function Player(maze, c, _cellsize, onComplete, sprite = null) {
   this.bindKeyDown();
 
   /* 加入回放功能 */
+  // 確保 `isReplaying` 變數只定義一次
+  if (typeof isReplaying === "undefined") {
+    var isReplaying = false;
+  }
+
   this.replayPath = function () {
+    if (isReplaying) {
+      console.warn("⚠️ 已經在回放中，忽略重複回放！");
+      return;
+    }
     if (pathHistory.length === 0) {
       console.log("⚠ 沒有記錄的路徑！");
       return;
@@ -1046,8 +1078,11 @@ function Player(maze, c, _cellsize, onComplete, sprite = null) {
 
     console.log("🔄 回到記錄點，開始回播路徑...");
 
+    // 🔹 **設置回放狀態**
+    isReplaying = true;
+
     // **暫存記錄狀態，並關閉記錄**
-    let previousRecordState = recordPath;
+    let wasRecording = recordPath;
     recordPath = false;
 
     // **回到固定記錄點**
@@ -1064,6 +1099,11 @@ function Player(maze, c, _cellsize, onComplete, sprite = null) {
 
     async function step() {
       while (index < pathHistory.length) {
+        if (!isReplaying) {
+          console.log("⏹️ 回放被手動中斷");
+          return;
+        }
+
         let direction = pathHistory[index];
 
         movePlayer(
@@ -1079,6 +1119,12 @@ function Player(maze, c, _cellsize, onComplete, sprite = null) {
         index++;
         await delay(300); // ✅ 改用 `await` 來讓 `setTimeout` 正確解析
       }
+
+      // 🔹 **回放結束後，恢復記錄狀態**
+      isReplaying = false; // 回放結束，恢復正常狀態
+      recordPath = wasRecording;
+      console.log("📌 回放結束，恢復記錄模式狀態:", recordPath);
+      
     }
 
     step();
@@ -1093,10 +1139,13 @@ function Player(maze, c, _cellsize, onComplete, sprite = null) {
 
   /* 設定記錄模式 */
   this.toggleRecord = function (enable) {
+    console.log(`🔄 設定記錄模式: ${enable}`);
     recordPath = enable;
+    console.log("📌 `toggleRecord()` 內 `recordPath` 狀態:", recordPath);
     if (enable) {
-      fixedRecordPoint = { ...cellCoords };  // **記錄當前位置為記錄點**
-      pathHistory = []; // **清空舊的路徑**
+      if (!fixedRecordPoint) {
+          fixedRecordPoint = { ...player.cellCoords };  // **如果沒有記錄點，則設定當前位置**
+      }
       console.log("✅ 開啟記錄模式，起始位置:", fixedRecordPoint);
     } else {
       console.log("⏸ 記錄暫停，但記錄點不變。");
