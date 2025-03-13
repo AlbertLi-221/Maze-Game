@@ -608,17 +608,18 @@ function Player(maze, c, _cellsize, onComplete, sprite = null) {
 
     let px = cellCoords.x;
     let py = cellCoords.y;
+    let visionSize = this.visionRadius; // 🔹 使用玩家的視野範圍
     let startCoord = maze.startCoord(); // 🔹 取得起點座標
     let endCoord = maze.endCoord();
 
-    // 🔹 **清除 3×3 視野內的迷霧**
-    for (let dx = -1; dx <= 1; dx++) {
-      for (let dy = -1; dy <= 1; dy++) {
-        let nx = px + dx;
-        let ny = py + dy;
-        if (isValidCoord(nx, ny)) {
-          ctx.clearRect(nx * cellSize, ny * cellSize, cellSize, cellSize);
-        }
+    // 🔹 **清除 `visionSize × visionSize` 的可視範圍內迷霧**
+    for (let dx = -visionSize; dx <= visionSize; dx++) {
+      for (let dy = -visionSize; dy <= visionSize; dy++) {
+          let nx = px + dx;
+          let ny = py + dy;
+          if (isValidCoord(nx, ny)) {
+              ctx.clearRect(nx * cellSize, ny * cellSize, cellSize, cellSize);
+          }
       }
     }
 
@@ -628,31 +629,34 @@ function Player(maze, c, _cellsize, onComplete, sprite = null) {
     // 🔹 **重新繪製視野內的迷宮線條**
     draw.redrawMaze(cellSize); // ✅ 直接使用 redrawMaze()，確保迷宮線條仍然可見
 
-    // 🔹 **對 3×3 視野範圍外的格子重新覆蓋迷霧**
+    // 🔹 **對 `visionSize × visionSize` 視野範圍外的格子重新覆蓋迷霧**
     for (let x = 0; x < map.length; x++) {
       for (let y = 0; y < map[x].length; y++) {
         if (
-          !((x >= px - 1 && x <= px + 1) && (y >= py - 1 && y <= py + 1)) && // 視野外
-          !(x === startCoord.x && y === startCoord.y) // 不是起點
+          !((x >= px - visionSize && x <= px + visionSize) && 
+            (y >= py - visionSize && y <= py + visionSize)) && // **視野外**
+          !(x === startCoord.x && y === startCoord.y) // **不是起點**
         ) {
           ctx.drawImage(fogImage, x * cellSize, y * cellSize, cellSize, cellSize);
         }
       }
     }
 
+
     // 🔹 **先清除終點的迷霧**
     ctx.clearRect(maze.endCoord.x * cellSize, maze.endCoord.y * cellSize, cellSize, cellSize);
 
-    // 🔹 **繪製視野內的事件**
+    // 🔹 **確保事件只有在 `visionSize × visionSize` 內才會顯示**
     draw.eventPositions.forEach(pos => {
-      if ((pos.x >= px - 1 && pos.x <= px + 1) && (pos.y >= py - 1 && pos.y <= py + 1)) {
-        let eventImage = new Image();
-        eventImage.src = "./dice.png"; // 假設事件圖片是 `dice.png`
-        eventImage.onload = function () {
-          ctx.drawImage(eventImage, pos.x * cellSize, pos.y * cellSize, cellSize, cellSize);
-        };
+      if ((pos.x >= px - visionSize && pos.x <= px + visionSize) &&
+          (pos.y >= py - visionSize && pos.y <= py + visionSize)) {
+          let eventImage = new Image();
+          eventImage.src = "./dice.png"; // 事件圖片
+          eventImage.onload = function () {
+              ctx.drawImage(eventImage, pos.x * cellSize, pos.y * cellSize, cellSize, cellSize);
+          };
       }
-    });
+  });
 
     // 🔹 **重新畫終點**
     draw.drawEndMethod();
@@ -769,6 +773,7 @@ function Player(maze, c, _cellsize, onComplete, sprite = null) {
               player.redrawPlayer(cellSize);
             }
             }
+            
             function Enhanced_Vision() {
               // 第一個事件 Your vision expands by 2 tiles for the next 3 steps!
 
@@ -835,6 +840,82 @@ function Player(maze, c, _cellsize, onComplete, sprite = null) {
 
             }
 
+            function Restricted_Vision() {
+              // 第二個事件 Your vision restricts by 2 tiles for the next 5 steps!
+
+              let px = cellCoords.x;
+              let py = cellCoords.y;
+              let startCoord = maze.startCoord(); // 🔹 取得起點座標
+              let endCoord = maze.endCoord();
+
+              // 清除玩家當前格子的迷霧
+              ctx.clearRect(px * cellSize, py * cellSize, cellSize, cellSize);
+
+              // 🔹 **確保起點不被迷霧覆蓋**
+              ctx.clearRect(startCoord.x * cellSize, startCoord.y * cellSize, cellSize, cellSize);
+
+              // 🔹 **清除終點的迷霧**
+              ctx.clearRect(endCoord.x * cellSize, endCoord.y * cellSize, cellSize, cellSize);
+
+              // 🔹 **重新繪製視野內的迷宮線條**
+              draw.redrawMaze(cellSize); // ✅ 直接使用 redrawMaze()，確保迷宮線條仍然可見
+
+              // 覆蓋所有視野外的格子
+              for (let x = 0; x < map.length; x++) {
+                for (let y = 0; y < map[x].length; y++) {
+                    if (!(x === px && y === py) && !(x === startCoord.x && y === startCoord.y)) {
+                       ctx.drawImage(fogImage, x * cellSize, y * cellSize, cellSize, cellSize);
+                    }
+                }
+              }
+
+              // 🔹 **先清除終點的迷霧**
+              ctx.clearRect(maze.endCoord.x * cellSize, maze.endCoord.y * cellSize, cellSize, cellSize);
+
+              // 🔹 **重新畫終點**
+              draw.drawEndMethod();
+
+              // 🔹 **重新畫玩家**
+              if (player) {
+                player.redrawPlayer(cellSize);
+              }
+
+            }
+
+            function Return_to_Start() {
+              console.log("🔄 觸發 Return to Start 事件！");
+          
+              // 取得起點座標
+              let startCoord = maze.startCoord();
+          
+              // 1️⃣ **先清除舊的玩家圖像**
+              player.removeSprite(player.cellCoords);
+          
+              // 2️⃣ **將玩家位置設置為起點**
+              player.cellCoords.x = startCoord.x;
+              player.cellCoords.y = startCoord.y;
+          
+              // 3️⃣ **清空回放模式的記錄**
+              pathHistory = [];
+              fixedRecordPoint = null; // 移除固定記錄點
+              console.log("⏹ 回放記錄已清空");
+          
+              // 4️⃣ **重新繪製迷宮，確保視野與迷霧更新**
+              draw.redrawMaze(cellSize);
+          
+              // 5️⃣ **重新繪製玩家圖像**
+              player.redrawPlayer(cellSize);
+          
+              // 6️⃣ **重新應用迷霧，確保正確顯示**
+              if (fogEnabled) {
+                  draw.applyFog();
+              }
+          
+              console.log("✅ 玩家已回到起點(return to start):", player.cellCoords);
+            }
+          
+          
+
             if (event.name === "Enhanced Vision" && fogEnabled) {
              
               let keyPressCount = 0;
@@ -850,6 +931,23 @@ function Player(maze, c, _cellsize, onComplete, sprite = null) {
                 }
               }
               window.addEventListener("keydown", incrementKeyPressCount);
+            } else if (event.name === "Restricted Vision" && fogEnabled) {
+                           
+              let keyPressCount = 0;
+
+              function incrementKeyPressCount() {
+                keyPressCount++;
+                console.log("Key pressed " + keyPressCount + " times");
+                
+                if (keyPressCount <= 5) {
+                  Restricted_Vision();
+                } else {
+                  default_action();
+                }
+              }
+              window.addEventListener("keydown", incrementKeyPressCount);
+            } else if (event.name === "Return to Start") {
+              Return_to_Start();
             }
             
           }
@@ -950,7 +1048,7 @@ function Player(maze, c, _cellsize, onComplete, sprite = null) {
 
         // ✅ 確保 `updateFog()` 只在 `fogEnabled` 開啟時執行
         if (fogEnabled) {
-          updateFog(cellCoords.x, cellCoords.y);
+          player.updateFog(cellCoords.x, cellCoords.y);
         }
 
         index++;
