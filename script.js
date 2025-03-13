@@ -644,7 +644,7 @@ function Player(maze, c, _cellsize, onComplete, sprite = null) {
 
 
     // 🔹 **先清除終點的迷霧**
-    ctx.clearRect(endCoord.x * cellSize, endCoord.y * cellSize, cellSize, cellSize);
+    ctx.clearRect(maze.endCoord().x * cellSize, maze.endCoord().y * cellSize, cellSize, cellSize);
 
     // 🔹 **確保事件只有在 `visionSize × visionSize` 內才會顯示**
     draw.eventPositions.forEach(pos => {
@@ -712,7 +712,7 @@ function Player(maze, c, _cellsize, onComplete, sprite = null) {
             console.log("🔹 事件名稱:", event.name);
             alert(`事件發生: ${event.name}\n${event.description}`);
 
-
+           
 
             function default_action() {
               let px = cellCoords.x;
@@ -830,7 +830,7 @@ function Player(maze, c, _cellsize, onComplete, sprite = null) {
               }
 
               // 🔹 **先清除終點的迷霧**
-              ctx.clearRect(endCoord.x * cellSize, endCoord.y * cellSize, cellSize, cellSize);
+              ctx.clearRect(maze.endCoord.x * cellSize, maze.endCoord.y * cellSize, cellSize, cellSize);
 
               // 🔹 **重新畫終點**
               draw.drawEndMethod();
@@ -886,9 +886,8 @@ function Player(maze, c, _cellsize, onComplete, sprite = null) {
                   }
                 }
               }
-
               // 🔹 **先清除終點的迷霧**
-              ctx.clearRect(maze.endCoord.x * cellSize, maze.endCoord.y * cellSize, cellSize, cellSize);
+                ctx.clearRect(endCoord.x * cellSize, endCoord.y * cellSize, cellSize, cellSize);
 
               // 🔹 **重新畫終點**
               draw.drawEndMethod();
