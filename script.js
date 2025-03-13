@@ -644,7 +644,7 @@ function Player(maze, c, _cellsize, onComplete, sprite = null) {
 
 
     // 🔹 **先清除終點的迷霧**
-    ctx.clearRect(maze.endCoord.x * cellSize, maze.endCoord.y * cellSize, cellSize, cellSize);
+    ctx.clearRect(maze.endCoord().x * cellSize, maze.endCoord().y * cellSize, cellSize, cellSize);
 
     // 🔹 **確保事件只有在 `visionSize × visionSize` 內才會顯示**
     draw.eventPositions.forEach(pos => {
@@ -856,7 +856,6 @@ function Player(maze, c, _cellsize, onComplete, sprite = null) {
                     ctx.drawImage(cloudImg, pos.x * cellSize, pos.y * cellSize, cellSize, cellSize);
                   };
                 }
-
               });
             }
             function Restricted_Vision() {
@@ -887,11 +886,8 @@ function Player(maze, c, _cellsize, onComplete, sprite = null) {
                   }
                 }
               }
-              // 清除所有視野外的事件
-              
-
               // 🔹 **先清除終點的迷霧**
-              ctx.clearRect(maze.endCoord.x * cellSize, maze.endCoord.y * cellSize, cellSize, cellSize);
+                ctx.clearRect(endCoord.x * cellSize, endCoord.y * cellSize, cellSize, cellSize);
 
               // 🔹 **重新畫終點**
               draw.drawEndMethod();
