@@ -912,6 +912,10 @@ function Player(maze, c, _cellsize, onComplete, sprite = null) {
               }
           
               console.log("✅ 玩家已回到起點(return to start):", player.cellCoords);
+
+              if (player) {
+                player.redrawPlayer(cellSize);
+              }
             }
           
           
