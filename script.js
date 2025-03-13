@@ -920,6 +920,9 @@ function Player(maze, c, _cellsize, onComplete, sprite = null) {
                     // 在事件圖案上加上迷霧
                     if (fogEnabled) {
                       ctx.drawImage(fogImage, pos.x * cellSize, pos.y * cellSize, cellSize, cellSize);
+                      //取得當前位置並加上迷霧
+                      player.updateFog(pos.x, pos.y);
+                      
                     }
                   });
                 };
