@@ -47,7 +47,7 @@ let fogEnabled = false; // 是否開啟迷霧
 let fogImage = new Image(); // 迷霧圖片
 fogImage.src = "./fog.jpg";
 
-this.visionRadius = 1; // 預設玩家視野範圍（對應 3×3，之後可修改, 0為1*1，2為5*5以此類推）
+// this.visionRadius = 1; // 預設玩家視野範圍（對應 3×3，之後可修改, 0為1*1，2為5*5以此類推）
 
 function Maze(Width, Height) {
   var mazeMap;
@@ -608,7 +608,7 @@ function Player(maze, c, _cellsize, onComplete, sprite = null) {
 
     let px = cellCoords.x;
     let py = cellCoords.y;
-    let visionSize = this.visionRadius; // 🔹 使用玩家的視野範圍
+    let visionSize = 1 ; // 🔹 使用玩家的視野範圍
     let startCoord = maze.startCoord(); // 🔹 取得起點座標
     let endCoord = maze.endCoord();
 
