@@ -712,7 +712,7 @@ function Player(maze, c, _cellsize, onComplete, sprite = null) {
             console.log("🔹 事件名稱:", event.name);
             alert(`事件發生: ${event.name}\n${event.description}`);
 
-           
+
 
             function default_action() {
               let px = cellCoords.x;
@@ -887,7 +887,7 @@ function Player(maze, c, _cellsize, onComplete, sprite = null) {
                 }
               }
               // 🔹 **先清除終點的迷霧**
-                ctx.clearRect(endCoord.x * cellSize, endCoord.y * cellSize, cellSize, cellSize);
+              ctx.clearRect(endCoord.x * cellSize, endCoord.y * cellSize, cellSize, cellSize);
 
               // 🔹 **重新畫終點**
               draw.drawEndMethod();
@@ -901,37 +901,37 @@ function Player(maze, c, _cellsize, onComplete, sprite = null) {
 
             function Return_to_Start() {
               console.log("🔄 觸發 Return to Start 事件！");
-
-              // 取得起點座標
-              let startCoord = maze.startCoord();
-
-              // 1️⃣ **先清除舊的玩家圖像**
-              player.removeSprite(player.cellCoords);
-
-              // 2️⃣ **將玩家位置設置為起點**
-              player.cellCoords.x = startCoord.x;
-              player.cellCoords.y = startCoord.y;
-
-              // 3️⃣ **清空回放模式的記錄**
-              pathHistory = [];
-              fixedRecordPoint = null; // 移除固定記錄點
-              console.log("⏹ 回放記錄已清空");
-
-              // 4️⃣ **重新繪製迷宮，確保視野與迷霧更新**
+              // 把玩家傳送到起點
+              if (player) {
+                player.unbindKeyDown(); // Unbind old player controls
+                player.removeSprite(player.cellCoords);
+              }
+              // 清除整個畫布
+              ctx.clearRect(0, 0, mazeCanvas.width, mazeCanvas.height);
+              // 重新繪製迷宮
               draw.redrawMaze(cellSize);
-
-              // 5️⃣ **重新繪製玩家圖像**
-              player.redrawPlayer(cellSize);
-
-              // 6️⃣ **重新應用迷霧，確保正確顯示**
+              // 重新繪製事件
+              if (draw.eventPositions.length > 0) {
+                let diceImg = new Image();
+                diceImg.src = "./dice.png";
+                diceImg.onload = function () {
+                  draw.eventPositions.forEach(pos => {
+                    ctx.drawImage(diceImg, pos.x * cellSize, pos.y * cellSize, cellSize, cellSize);
+                    // 在事件圖案上加上迷霧
+                    if (fogEnabled) {
+                      ctx.drawImage(fogImage, pos.x * cellSize, pos.y * cellSize, cellSize, cellSize);
+                    }
+                  });
+                };
+              }
+              // 重新繪製迷霧
               if (fogEnabled) {
                 draw.applyFog();
               }
-
-              console.log("✅ 玩家已回到起點(return to start):", player.cellCoords);
-
-              if (player) {
-                player.redrawPlayer(cellSize);
+              player = new Player(maze, mazeCanvas, cellSize, displayVictoryMess, sprite); // Re-initialize player
+              moves = 0;
+              if (recordPath) {
+                pathHistory = [];
               }
             }
 
