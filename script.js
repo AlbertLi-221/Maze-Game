@@ -47,7 +47,7 @@ let fogEnabled = false; // 是否開啟迷霧
 let fogImage = new Image(); // 迷霧圖片
 fogImage.src = "./fog.jpg";
 
-this.visionRadius = 1; // 預設玩家視野範圍（對應 3×3，之後可修改, 0為1*1，2為5*5以此類推）
+// this.visionRadius = 1; // 預設玩家視野範圍（對應 3×3，之後可修改, 0為1*1，2為5*5以此類推）
 
 function Maze(Width, Height) {
   var mazeMap;
@@ -542,12 +542,16 @@ function Player(maze, c, _cellsize, onComplete, sprite = null) {
   var pathHistory = [];  // 記錄路徑
   recordPath = false;  // 是否記錄
   var fixedRecordPoint = null; // **存放開啟記錄時的位置**
+  var canPassThroughWalls = false; // 是否啟用穿牆模式
+
 
   var drawSprite = sprite ? drawSpriteImg : drawSpriteCircle;
 
   this.getCellCoords = function () {  // 🔹 提供方法來取得座標
     return cellCoords;
   };
+
+
 
   function drawSpriteCircle(coord) {
     ctx.beginPath();
@@ -611,7 +615,7 @@ function Player(maze, c, _cellsize, onComplete, sprite = null) {
 
     let px = cellCoords.x;
     let py = cellCoords.y;
-    let visionSize = this.visionRadius; // 🔹 使用玩家的視野範圍
+    let visionSize = 1 ; // 🔹 使用玩家的視野範圍
     let startCoord = maze.startCoord(); // 🔹 取得起點座標
     let endCoord = maze.endCoord();
 
@@ -678,9 +682,25 @@ function Player(maze, c, _cellsize, onComplete, sprite = null) {
     var newCoords = { x: cellCoords.x + dx, y: cellCoords.y + dy };
 
     var cell = map[cellCoords.x][cellCoords.y];
-    if ((dx === -1 && !cell.w) || (dx === 1 && !cell.e) ||
-      (dy === -1 && !cell.n) || (dy === 1 && !cell.s)) {
+    if (!canPassThroughWalls) {
+      if ((dx === -1 && !cell.w) || (dx === 1 && !cell.e) ||
+        (dy === -1 && !cell.n) || (dy === 1 && !cell.s)) {
       return;
+      }
+    } else {
+      // Check if the player has already passed through a wall
+      if (player.hasPassedThroughWall) {
+      if ((dx === -1 && !cell.w) || (dx === 1 && !cell.e) ||
+        (dy === -1 && !cell.n) || (dy === 1 && !cell.s)) {
+        return;
+      }
+      } else {
+      // Mark that the player has passed through a wall
+      if ((dx === -1 && !cell.w) || (dx === 1 && !cell.e) ||
+        (dy === -1 && !cell.n) || (dy === 1 && !cell.s)) {
+        player.hasPassedThroughWall = true;
+      }
+      }
     }
 
     player.removeSprite(cellCoords);
@@ -996,6 +1016,12 @@ function Player(maze, c, _cellsize, onComplete, sprite = null) {
               recordPath = true;
               fixedRecordPoint = { ...player.cellCoords };
               console.log("🔄 強制開啟記錄，起始點:", fixedRecordPoint);
+            }
+            else if (event.name === "Wall Pass") {
+              canPassThroughWalls = true
+              if(player.hasPassedThroughWall = true){
+                player.hasPassedThroughWall = false;
+              }
             }
 
           }
