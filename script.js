@@ -515,8 +515,11 @@ function makeMaze() {
   }
 }
 
+var pathHistory = [];  // 記錄路徑
+
 document.getElementById("record-checkbox").addEventListener("change", function () {
   player.toggleRecord(this.checked);
+  console.log("🔴 記錄移動路徑:", this.checked);
 });
 
 var recordPath = false;  // 全域變數，控制是否記錄移動路徑
@@ -539,7 +542,7 @@ function Player(maze, c, _cellsize, onComplete, sprite = null) {
 
   var cellSize = _cellsize;
   var halfCellSize = cellSize / 2;
-  var pathHistory = [];  // 記錄路徑
+  
   recordPath = false;  // 是否記錄
   var fixedRecordPoint = null; // **存放開啟記錄時的位置**
   var canPassThroughWalls = false; // 是否啟用穿牆模式
@@ -615,7 +618,7 @@ function Player(maze, c, _cellsize, onComplete, sprite = null) {
 
     let px = cellCoords.x;
     let py = cellCoords.y;
-    let visionSize = 1 ; // 🔹 使用玩家的視野範圍
+    let visionSize = 1; // 🔹 使用玩家的視野範圍
     let startCoord = maze.startCoord(); // 🔹 取得起點座標
     let endCoord = maze.endCoord();
 
@@ -685,21 +688,21 @@ function Player(maze, c, _cellsize, onComplete, sprite = null) {
     if (!canPassThroughWalls) {
       if ((dx === -1 && !cell.w) || (dx === 1 && !cell.e) ||
         (dy === -1 && !cell.n) || (dy === 1 && !cell.s)) {
-      return;
+        return;
       }
     } else {
       // Check if the player has already passed through a wall
       if (player.hasPassedThroughWall) {
-      if ((dx === -1 && !cell.w) || (dx === 1 && !cell.e) ||
-        (dy === -1 && !cell.n) || (dy === 1 && !cell.s)) {
-        return;
-      }
+        if ((dx === -1 && !cell.w) || (dx === 1 && !cell.e) ||
+          (dy === -1 && !cell.n) || (dy === 1 && !cell.s)) {
+          return;
+        }
       } else {
-      // Mark that the player has passed through a wall
-      if ((dx === -1 && !cell.w) || (dx === 1 && !cell.e) ||
-        (dy === -1 && !cell.n) || (dy === 1 && !cell.s)) {
-        player.hasPassedThroughWall = true;
-      }
+        // Mark that the player has passed through a wall
+        if ((dx === -1 && !cell.w) || (dx === 1 && !cell.e) ||
+          (dy === -1 && !cell.n) || (dy === 1 && !cell.s)) {
+          player.hasPassedThroughWall = true;
+        }
       }
     }
 
@@ -709,9 +712,9 @@ function Player(maze, c, _cellsize, onComplete, sprite = null) {
     moves++;
 
     player.updateFog(cellCoords.x, cellCoords.y); // 🔹 移動後更新迷霧
-    console.log("🚶 玩家移動: dx =", dx, "dy =", dy);
-    console.log("🎯 當前座標:", cellCoords);
-    console.log("📌 `movePlayer()` 內部的 `recordPath` 狀態:", recordPath);
+    // console.log("🚶 玩家移動: dx =", dx, "dy =", dy);
+    // console.log("🎯 當前座標:", cellCoords);
+    // console.log("📌 `movePlayer()` 內部的 `recordPath` 狀態:", recordPath);
 
     // 記錄路徑
     if (recordPath && !isReplaying) {
@@ -722,11 +725,13 @@ function Player(maze, c, _cellsize, onComplete, sprite = null) {
       if (dy === 1) direction = "down";
 
       pathHistory.push(direction);
-      console.log("目前路徑:", pathHistory.join(" → "));
-      console.log("📌 新增移動記錄:", direction);
-      console.log("📜 當前路徑記錄:", pathHistory);
+      // console.log(pathHistory);
+      // console.log(pathHistory.length);
+      // console.log("目前路徑:", pathHistory.join(" → "));
+      // console.log("📌 新增移動記錄:", direction);
+      // console.log("📜 當前路徑記錄:", pathHistory);
     } else {
-      console.log("⚠ `recordPath` 為", recordPath, " 或 `isReplaying` 為", isReplaying, "未記錄移動");
+      // console.log("⚠ `recordPath` 為", recordPath, " 或 `isReplaying` 為", isReplaying, "未記錄移動");
     }
 
     // 🔹 檢查是否踩到事件
@@ -931,10 +936,11 @@ function Player(maze, c, _cellsize, onComplete, sprite = null) {
 
             function Return_to_Start() {
               console.log("🔄 觸發 Return to Start 事件！");
+              player.removeSprite(player.cellCoords);
               // 把玩家傳送到起點
               if (player) {
                 player.unbindKeyDown(); // Unbind old player controls
-                player.removeSprite(player.cellCoords);
+                
               }
               // 清除整個畫布
               ctx.clearRect(0, 0, mazeCanvas.width, mazeCanvas.height);
@@ -952,7 +958,7 @@ function Player(maze, c, _cellsize, onComplete, sprite = null) {
                       ctx.drawImage(fogImage, pos.x * cellSize, pos.y * cellSize, cellSize, cellSize);
                       //取得當前位置並加上迷霧
                       player.updateFog(pos.x, pos.y);
-                      
+
                     }
                   });
                 };
@@ -967,15 +973,16 @@ function Player(maze, c, _cellsize, onComplete, sprite = null) {
 
               pathHistory = [];
               console.log("🗑 清空路徑記錄:", pathHistory);
+              // 關閉record樣式
+              document.getElementById("record-checkbox").checked = false;
 
-              if (recordPath) {
-                fixedRecordPoint = { ...player.cellCoords }; // **重新設定記錄點**
-                // isReplaying = false; // **確保回放狀態被重置**
-                console.log("✅ `Return to Start` 完成，記錄模式開啟，新的 `fixedRecordPoint`:", fixedRecordPoint);
-              } else {
-                console.log("⛔ `Return to Start` 完成，但 `recordPath` 已關閉，無法記錄！");
-              }
-              console.log("📌 `Return to Start` 後 `recordPath` 狀態:", recordPath);
+              if (document.getElementById("record-checkbox").checked == false) {
+                recordPath = false;
+              }else{
+                recordPath = true;
+              } 
+
+              isReplaying = false; 
             }
 
 
@@ -1013,13 +1020,14 @@ function Player(maze, c, _cellsize, onComplete, sprite = null) {
               window.addEventListener("keydown", incrementKeyPressCount);
             } else if (event.name === "Return to Start") {
               Return_to_Start();
-              recordPath = true;
-              fixedRecordPoint = { ...player.cellCoords };
-              console.log("🔄 強制開啟記錄，起始點:", fixedRecordPoint);
+              // isReplaying = false;
+              // recordPath = true;
+              // fixedRecordPoint = { ...player.cellCoords };
+              // console.log("🔄 強制開啟記錄，起始點:", fixedRecordPoint);
             }
             else if (event.name === "Wall Pass") {
               canPassThroughWalls = true
-              if(player.hasPassedThroughWall = true){
+              if (player.hasPassedThroughWall = true) {
                 player.hasPassedThroughWall = false;
               }
             }
@@ -1150,7 +1158,7 @@ function Player(maze, c, _cellsize, onComplete, sprite = null) {
       isReplaying = false; // 回放結束，恢復正常狀態
       recordPath = wasRecording;
       console.log("📌 回放結束，恢復記錄模式狀態:", recordPath);
-      
+
     }
 
     step();
@@ -1170,7 +1178,7 @@ function Player(maze, c, _cellsize, onComplete, sprite = null) {
     console.log("📌 `toggleRecord()` 內 `recordPath` 狀態:", recordPath);
     if (enable) {
       if (!fixedRecordPoint) {
-          fixedRecordPoint = { ...player.cellCoords };  // **如果沒有記錄點，則設定當前位置**
+        fixedRecordPoint = { ...player.cellCoords };  // **如果沒有記錄點，則設定當前位置**
       }
       console.log("✅ 開啟記錄模式，起始位置:", fixedRecordPoint);
     } else {
